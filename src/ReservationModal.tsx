@@ -1,32 +1,75 @@
 import React from 'react';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+
+interface TimeSlot {
+  hour: number;
+  minute: number;
+  duration: number;
+  isAvailable: boolean;
+}
 
 interface ReservationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
   room: { id: number; name: string } | null;
-  date: Date | null;
-  time: number | string | null;
+  date: Date;
+  time: TimeSlot | null;
+  isSubmitting: boolean;
 }
 
-const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, onConfirm, room, date, time }) => {
-  if (!isOpen || !room || !date || time === null) return null;
+const ReservationModal: React.FC<ReservationModalProps> = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  room,
+  date,
+  time,
+  isSubmitting
+}) => {
+  if (!isOpen) return null;
 
-  const formattedDate = date.toLocaleDateString();
-  const formattedTime = typeof time === 'number' && time <= 12 ? `${time}am` : `${time}pm`;
+  const formattedDate = format(date, 'EEEE d MMMM yyyy', { locale: fr });
+  const formattedTime = time ? `${String(time.hour).padStart(2, '0')}:${String(time.minute).padStart(2, '0')}` : '';
+  
+  // Calculate end time based on duration
+  const endTime = time ? (() => {
+    const endDate = new Date();
+    endDate.setHours(time.hour, time.minute + time.duration, 0, 0);
+    return `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`;
+  })() : '';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4">Finalize Reservation</h2>
-        <div className="mb-4 space-y-2">
-          <div><span className="font-semibold">Room:</span> {room.name}</div>
-          <div><span className="font-semibold">Date:</span> {formattedDate}</div>
-          <div><span className="font-semibold">Time:</span> {formattedTime}</div>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-8 max-w-md w-full">
+        <h2 className="text-2xl font-bold mb-4">Confirmer la réservation</h2>
+        <div className="space-y-4">
+          <p>
+            <span className="font-semibold">Salle:</span> {room?.name}
+          </p>
+          <p>
+            <span className="font-semibold">Date:</span> {formattedDate}
+          </p>
+          <p>
+            <span className="font-semibold">Horaire:</span> {formattedTime} - {endTime}
+          </p>
         </div>
-        <div className="flex justify-end gap-2 mt-6">
-          <button onClick={onClose} className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300">Cancel</button>
-          <button onClick={onConfirm} className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Confirm</button>
+        <div className="mt-8 flex justify-end space-x-4">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+            disabled={isSubmitting}
+          >
+            Annuler
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-red-300"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Réservation en cours...' : 'Confirmer'}
+          </button>
         </div>
       </div>
     </div>

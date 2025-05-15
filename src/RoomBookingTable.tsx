@@ -20,13 +20,11 @@ interface TimeSlot {
 // Time slots with their durations and availability
 const timeSlots: TimeSlot[] = [
   { hour: 8, minute: 30, duration: 90, isAvailable: true },  // 8:30 - 10:00
-  { hour: 10, minute: 0, duration: 15, isAvailable: false }, // 10:00 - 10:15 (break)
   { hour: 10, minute: 15, duration: 90, isAvailable: true }, // 10:15 - 11:45
   { hour: 11, minute: 45, duration: 75, isAvailable: true }, // 11:45 - 13:00
   { hour: 13, minute: 0, duration: 90, isAvailable: true },  // 13:00 - 14:30
-  { hour: 14, minute: 30, duration: 15, isAvailable: false }, // 14:30 - 14:45 (break)
   { hour: 14, minute: 45, duration: 90, isAvailable: true }, // 14:45 - 16:15
-  { hour: 16, minute: 15, duration: 90, isAvailable: true }  // 16:15 - 17:45
+
 ];
 
 const RoomBookingTable: React.FC<RoomBookingTableProps> = ({ 
@@ -76,45 +74,49 @@ const RoomBookingTable: React.FC<RoomBookingTableProps> = ({
 
   // Format time slot for display
   const formatTimeSlot = (slot: TimeSlot) => {
-    const isPM = slot.hour >= 12;
-    const displayHour = slot.hour > 12 ? slot.hour - 12 : slot.hour;
-    const minuteStr = slot.minute.toString().padStart(2, '0');
+    const startHour = slot.hour.toString().padStart(2, '0');
+    const startMinute = slot.minute.toString().padStart(2, '0');
     const endTime = new Date(0, 0, 0, slot.hour, slot.minute + slot.duration);
-    const endHour = endTime.getHours() > 12 ? endTime.getHours() - 12 : endTime.getHours();
-    const endMinuteStr = endTime.getMinutes().toString().padStart(2, '0');
-    const endIsPM = endTime.getHours() >= 12;
+    const endHour = endTime.getHours().toString().padStart(2, '0');
+    const endMinute = endTime.getMinutes().toString().padStart(2, '0');
     
-    return `${displayHour}:${minuteStr}${isPM ? 'pm' : 'am'} - ${endHour}:${endMinuteStr}${endIsPM ? 'pm' : 'am'}`;
+    return `${startHour}:${startMinute}  -  ${endHour}:${endMinute}`;
   };
 
   return (
-    <div className="w-full bg-white border border-gray-300 rounded mt-6 overflow-x-auto">
-      <table className="w-full border-collapse font-sans text-sm">
+    <div className="w-full bg-white rounded-lg shadow-lg mt-6">
+      <table className="w-full border-collapse">
         <thead>
-          <tr>
-            <th className="bg-gray-100 font-bold border border-gray-300 px-4 py-2 text-left min-w-[100px]">Room</th>
-            <th className="bg-gray-100 font-bold border border-gray-300 px-4 py-2 text-left min-w-[120px]">Description</th>
+          <tr className="bg-slate-50">
+            <th className="font-semibold text-slate-700 px-4 py-3 text-left min-w-[120px] border-b border-slate-200">Room</th>
+            <th className="font-semibold text-slate-700 px-4 py-3 text-left min-w-[150px] border-b border-slate-200">Description</th>
             {!hideLocationColumn && (
-              <th className="bg-gray-100 font-bold border border-gray-300 px-4 py-2 text-left min-w-[120px]">Location</th>
+              <th className="font-semibold text-slate-700 px-4 py-3 text-left min-w-[120px] border-b border-slate-200">Location</th>
             )}
             {timeSlots.map((slot, idx) => (
               <th
                 key={idx}
-                className="bg-gray-100 font-bold border border-gray-300 px-2 py-2 min-w-[120px] text-center"
+                className="font-bold text-slate-700 px-3 py-3 min-w-[100px] text-center border-b border-slate-200"
               >
                 {formatTimeSlot(slot)}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-slate-200">
           {rooms && Array.isArray(rooms) && rooms.length > 0 ? (
             rooms.map(room => (
-              <tr key={room.id}>
-                <td className="border border-gray-300 px-4 py-2 text-left">{room.nom}</td>
-                <td className="border border-gray-300 px-4 py-2 text-left text-gray-500">{room.description}</td>
+              <tr key={room.id} className="hover:bg-slate-50 transition-colors">
+                <td className="font-medium text-slate-900 px-4 py-3 border-r border-slate-200">
+                  {room.nom}
+                </td>
+                <td className="text-slate-600 px-4 py-3 border-r border-slate-200">
+                  {room.description.length > 20 ? `${room.description.substring(0, 20)}...` : room.description}
+                </td>
                 {!hideLocationColumn && (
-                  <td className="border border-gray-300 px-4 py-2 text-left text-gray-500">{room.localisationNom}</td>
+                  <td className="text-slate-600 px-4 py-3 border-r border-slate-200">
+                    {room.localisationNom}
+                  </td>
                 )}
                 {timeSlots.map((slot, idx) => {
                   const booked = isBooked(room.id, slot);
@@ -122,24 +124,38 @@ const RoomBookingTable: React.FC<RoomBookingTableProps> = ({
                   return (
                     <td
                       key={idx}
-                      className={`border border-gray-300 px-2 py-2 ${
-                        !slot.isAvailable 
-                          ? "bg-gray-200 cursor-not-allowed" 
-                          : booked 
-                            ? "bg-red-600 text-white" 
-                            : "bg-white cursor-pointer hover:bg-blue-100"
-                      }`}
+                      className={`px-3 py-3 border-r border-slate-200 transition-colors ${
+                        booked 
+                          ? "bg-rose-50 cursor-not-allowed" 
+                          : "bg-white hover:bg-slate-50 cursor-pointer"
+                      } ${idx === timeSlots.length - 1 ? 'border-r-0' : ''}`}
                       onClick={() => {
                         if (isClickable) onCellClick({ id: room.id, name: room.nom }, slot);
                       }}
-                    ></td>
+                    >
+                      {booked && (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-rose-600 text-sm font-medium">Booked</span>
+                        </div>
+                      )}
+                    </td>
                   );
                 })}
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan={hideLocationColumn ? 2 + timeSlots.length : 3 + timeSlots.length} className="text-center text-gray-400 py-4">No rooms found</td>
+              <td 
+                colSpan={hideLocationColumn ? 2 + timeSlots.length : 3 + timeSlots.length} 
+                className="text-center text-slate-500 py-6"
+              >
+                <div className="flex flex-col items-center">
+                  <svg className="w-8 h-8 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                  <span className="text-sm font-medium">No rooms found</span>
+                </div>
+              </td>
             </tr>
           )}
         </tbody>

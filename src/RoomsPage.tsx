@@ -155,42 +155,70 @@ const RoomsPage: React.FC = () => {
   };
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-slate-50">
       <Sidebar selectedDate={selectedDate} onDateChange={setSelectedDate} />
       <main className="flex-1 p-8">
-        {/* Location filter buttons */}
-        <div className="flex items-center gap-4 mb-6">
-          {uniqueLocations.map(loc => (
-            <button
-              key={loc}
-              className={`px-6 py-2 rounded-full border font-semibold text-base transition-colors shadow-sm
-                ${selectedLocation === loc
-                  ? 'bg-red-600 text-white border-red-600'
-                  : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}
-              `}
-              onClick={() => setSelectedLocation(loc)}
-            >
-              {loc}
-            </button>
-          ))}
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-slate-900 mb-2">Room Booking</h1>
+            <p className="text-slate-600">Select a room and time slot to make a reservation</p>
+          </div>
+
+          {/* Location filter buttons */}
+          <div className="flex items-center justify-center gap-3 mb-6">
+            {uniqueLocations.map(loc => (
+              <button
+                key={loc}
+                className={`px-6 py-2.5 rounded-lg border font-medium text-sm transition-all shadow-sm whitespace-nowrap
+                  ${selectedLocation === loc
+                    ? 'bg-rose-600 text-white border-rose-600 shadow-md transform scale-105'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-slate-300'
+                  }
+                `}
+                onClick={() => setSelectedLocation(loc)}
+              >
+                {loc}
+              </button>
+            ))}
+          </div>
+
+          {/* Selected location title */}
+          {selectedLocation && (
+            <div className="flex items-center gap-2 mb-6">
+              <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <h2 className="text-lg font-semibold text-slate-900">{selectedLocation}</h2>
+            </div>
+          )}
+
+          {/* Loading and error states */}
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="flex flex-col items-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-rose-600 mb-4"></div>
+                <span className="text-slate-600">Loading rooms...</span>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="bg-rose-50 border border-rose-200 rounded-lg p-4 text-center">
+              <svg className="w-6 h-6 text-rose-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-rose-600 font-medium">{error}</p>
+            </div>
+          ) : (
+            <RoomBookingTable
+              selectedDate={selectedDate}
+              onCellClick={handleCellClick}
+              rooms={filteredRooms}
+              hideLocationColumn={true}
+              reservations={reservations}
+            />
+          )}
         </div>
-        {/* Selected location title */}
-        {selectedLocation && (
-          <div className="font-bold text-lg mb-2">{selectedLocation}</div>
-        )}
-        {loading ? (
-          <div className="text-center text-gray-500">Loading rooms...</div>
-        ) : error ? (
-          <div className="text-center text-red-500">{error}</div>
-        ) : (
-          <RoomBookingTable
-            selectedDate={selectedDate}
-            onCellClick={handleCellClick}
-            rooms={filteredRooms}
-            hideLocationColumn={true}
-            reservations={reservations}
-          />
-        )}
       </main>
       <ReservationModal
         isOpen={modalOpen}

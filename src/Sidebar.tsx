@@ -13,7 +13,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedDate, onDateChange }) => {
       <Calendar selectedDate={selectedDate} onDateChange={onDateChange} />
 
       {/* Filter Section (placeholder) */}
-      <div>
+      {/* <div>
         <h2 className="font-semibold text-gray-700 mb-2 text-base">Filter by <span className="inline-block align-middle">▼</span></h2>
         <div className="space-y-2 text-sm">
           <div>
@@ -55,10 +55,10 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedDate, onDateChange }) => {
             <button className="bg-gray-200 text-gray-700 px-3 py-1 rounded text-xs">RESET</button>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Key Section (placeholder) */}
-      <div className="mt-auto">
+      {/* <div className="mt-auto">
         <h2 className="font-semibold text-gray-700 mb-2 text-base">Key <span className="inline-block align-middle">▼</span></h2>
         <div className="flex items-center gap-2 mb-1">
           <span className="inline-block w-4 h-4 bg-red-600 rounded mr-2"></span>
@@ -68,7 +68,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedDate, onDateChange }) => {
           <span className="inline-block w-4 h-4 bg-gray-300 rounded mr-2"></span>
           <span className="text-xs">Business unit 2</span>
         </div>
-      </div>
+      </div> */}
     </aside>
   );
 };

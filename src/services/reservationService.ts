@@ -50,11 +50,30 @@ export const getAllReservations = async (date?: Date) => {
 
 export const getUserReservations = async () => {
   try {
+    console.log('Making API request to:', `/reservations/user/${USER_ID}`);
     const response = await api.get<Reservation[]>(`/reservations/user/${USER_ID}`);
-    console.log('User Reservations API Response:', response);
-    return response.data;
-  } catch (error) {
+    console.log('Raw API Response:', response);
+    
+    if (!response.data) {
+      console.error('No data in response');
+      return { data: [] };
+    }
+    
+    // Ensure we're returning an array
+    const data = Array.isArray(response.data) ? response.data : [response.data];
+    console.log('Processed reservations data:', data);
+    
+    return { data };
+  } catch (error: any) {
     console.error('Error fetching user reservations:', error);
+    if (error.response) {
+      console.error('Error response data:', error.response.data);
+      console.error('Error response status:', error.response.status);
+    } else if (error.request) {
+      console.error('No response received:', error.request);
+    } else {
+      console.error('Error setting up request:', error.message);
+    }
     throw error;
   }
 };
@@ -71,5 +90,6 @@ export const createReservation = (data: {
   dateFin: string;
   utilisateurId: number;
   statut: string;
+  description: string;
 }) => 
   api.post<Reservation>(`/reservations`, data);

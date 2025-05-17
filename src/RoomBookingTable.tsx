@@ -21,7 +21,7 @@ interface TimeSlot {
 const timeSlots: TimeSlot[] = [
   { hour: 8, minute: 30, duration: 90, isAvailable: true },  // 8:30 - 10:00
   { hour: 10, minute: 15, duration: 90, isAvailable: true }, // 10:15 - 11:45
-  { hour: 11, minute: 45, duration: 75, isAvailable: true }, // 11:45 - 13:00
+  // { hour: 11, minute: 45, duration: 75, isAvailable: true }, // 11:45 - 13:00
   { hour: 13, minute: 0, duration: 90, isAvailable: true },  // 13:00 - 14:30
   { hour: 14, minute: 45, duration: 90, isAvailable: true }, // 14:45 - 16:15
 
@@ -111,7 +111,7 @@ const RoomBookingTable: React.FC<RoomBookingTableProps> = ({
                   {room.nom}
                 </td>
                 <td className="text-slate-600 px-4 py-3 border-r border-slate-200">
-                  {room.description.length > 20 ? `${room.description.substring(0, 20)}...` : room.description}
+                  {room.description.length > 20 ? `${room.description.substring(0,30)}...` : room.description}
                 </td>
                 {!hideLocationColumn && (
                   <td className="text-slate-600 px-4 py-3 border-r border-slate-200">

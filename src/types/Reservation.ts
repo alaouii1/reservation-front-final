@@ -7,6 +7,7 @@ export interface Reservation {
   id: number;
   dateDebut: string;
   dateFin: string;
+  description: string;
   salle: {
     id: number;
     nom: string;

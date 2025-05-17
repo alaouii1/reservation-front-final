@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -12,7 +12,7 @@ interface TimeSlot {
 interface ReservationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (description: string) => void;
   room: { id: number; name: string } | null;
   date: Date;
   time: TimeSlot | null;
@@ -28,6 +28,8 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
   time,
   isSubmitting
 }) => {
+  const [description, setDescription] = useState('');
+
   if (!isOpen) return null;
 
   const formattedDate = format(date, 'EEEE d MMMM yyyy', { locale: fr });
@@ -41,7 +43,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
   })() : '';
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl transform transition-all">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-gray-900">Confirm Reservation</h2>
@@ -89,6 +91,22 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
               <p className="text-gray-900">{formattedTime} - {endTime}</p>
             </div>
           </div>
+
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              </svg>
+              <span className="text-sm font-medium text-gray-700">Description</span>
+            </div>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter the reason for your reservation..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors"
+              rows={3}
+            />
+          </div>
         </div>
 
         <div className="mt-8 flex justify-end gap-4">
@@ -100,7 +118,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
             Cancel
           </button>
           <button
-            onClick={onConfirm}
+            onClick={() => onConfirm(description)}
             className="px-6 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             disabled={isSubmitting}
           >

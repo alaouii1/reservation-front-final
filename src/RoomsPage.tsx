@@ -94,7 +94,7 @@ const RoomsPage: React.FC = () => {
     setSelectedTime(null);
   };
 
-  const handleModalConfirm = async () => {
+  const handleModalConfirm = async (description: string) => {
     if (!selectedRoom || !selectedDate || !selectedTime) return;
 
     try {
@@ -122,7 +122,8 @@ const RoomsPage: React.FC = () => {
         dateFin,
         salleId: selectedRoom.id,
         utilisateurId: 1,
-        statut: "EN_ATTENTE"
+        statut: "EN_ATTENTE",
+        description
       });
 
       const response = await createReservation({
@@ -130,7 +131,8 @@ const RoomsPage: React.FC = () => {
         dateFin,
         salleId: selectedRoom.id,
         utilisateurId: 1,
-        statut: "EN_ATTENTE"
+        statut: "EN_ATTENTE",
+        description
       });
 
       console.log('Reservation created:', response.data);

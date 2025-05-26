@@ -121,7 +121,6 @@ const RoomsPage: React.FC = () => {
         dateDebut,
         dateFin,
         salleId: selectedRoom.id,
-        utilisateurId: 1,
         statut: "EN_ATTENTE",
         description
       });
@@ -130,7 +129,6 @@ const RoomsPage: React.FC = () => {
         dateDebut,
         dateFin,
         salleId: selectedRoom.id,
-        utilisateurId: 1,
         statut: "EN_ATTENTE",
         description
       });

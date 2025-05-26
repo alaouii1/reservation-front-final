@@ -6,7 +6,6 @@ const USER_ID = 1; // TODO: Get this from authentication context
 export const getAllReservations = async (date?: Date) => {
   try {
     console.log('Fetching all reservations...');
-    // Always use the base endpoint for now
     const response = await api.get<Reservation[]>('/reservations');
     console.log('API Response status:', response.status);
     console.log('API Response headers:', response.headers);
@@ -19,21 +18,14 @@ export const getAllReservations = async (date?: Date) => {
     
     // Filter reservations by date on the client side
     if (date) {
-      // Use local date string (YYYY-MM-DD)
       const dateStr = date.toLocaleDateString('en-CA');
       console.log('Filtering reservations for date:', dateStr);
       
       const filteredReservations = response.data.filter(reservation => {
         const reservationDate = reservation.dateDebut.split('T')[0];
-        console.log('Comparing dates:', {
-          selectedDate: dateStr,
-          reservationDate,
-          matches: reservationDate === dateStr
-        });
         return reservationDate === dateStr;
       });
       
-      console.log('Filtered reservations:', filteredReservations);
       return filteredReservations;
     }
     
@@ -44,7 +36,7 @@ export const getAllReservations = async (date?: Date) => {
       console.error('Error response:', error.response.data);
       console.error('Error status:', error.response.status);
     }
-    throw error;
+    throw new Error(error.response?.data?.message || 'Erreur lors du chargement des réservations');
   }
 };
 
@@ -74,7 +66,7 @@ export const getUserReservations = async () => {
     } else {
       console.error('Error setting up request:', error.message);
     }
-    throw error;
+    throw new Error(error.response?.data?.message || 'Erreur lors du chargement des réservations');
   }
 };
 

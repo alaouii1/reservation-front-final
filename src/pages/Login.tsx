@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
+import type { FormEvent } from 'react';
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 
 const Login = () => {
-const navigate = useNavigate();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('email@university.fr');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setErrorMessage('');
 
     const loginData = {
       email,
@@ -18,22 +20,25 @@ const navigate = useNavigate();
     };
 
     try {
+      console.log('Attempting login with:', loginData);
       const response = await axios.post('http://localhost:8080/api/utilisateurs/login', loginData);
+      console.log('Login response:', response.data);
 
       if (response.status === 200) {
-        // If the login is successful, you can redirect the user
-        console.log(response.data);
-
         const userData = response.data;
+        console.log('User data:', userData);
         localStorage.setItem("user", JSON.stringify(userData));
         
-        if(userData.role === "PROFESSOR"){
-            navigate("/salles");
-        }
-
+        // Navigate to rooms page for both admin and professor
+        console.log('Navigating to rooms page...');
+        navigate("/salles");
       }
     } catch (error) {
-      // Handle the error when login fails
+      console.error('Login error:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Error response:', error.response?.data);
+        console.error('Error status:', error.response?.status);
+      }
       setErrorMessage('Erreur de connexion, veuillez vérifier vos informations.');
     }
   };
@@ -89,9 +94,14 @@ const navigate = useNavigate();
             <a href="#" className="text-sm text-blue-500">Mot de passe oublié ?</a>
           </div>
 
-          {errorMessage && <div className="text-red-500 text-sm">{errorMessage}</div>}
+          {errorMessage && (
+            <div className="text-red-500 text-sm text-center">{errorMessage}</div>
+          )}
 
-          <button type="submit" className="w-full py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+          <button 
+            type="submit" 
+            className="w-full py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+          >
             Se connecter
           </button>
         </form>

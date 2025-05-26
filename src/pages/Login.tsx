@@ -25,6 +25,7 @@ const navigate = useNavigate();
         console.log(response.data);
 
         const userData = response.data;
+        console.log(userData);
         localStorage.setItem("user", JSON.stringify(userData));
         
         if(userData.role === "PROFESSOR"){

@@ -1,7 +1,22 @@
 import { api } from '../api/axios';
 import type { Reservation } from '../types/Reservation';
 
-const USER_ID = 1; // TODO: Get this from authentication context
+const getUserId = (): number => {
+  const userStr = localStorage.getItem("user");
+  if (!userStr) {
+    throw new Error('User not found in localStorage');
+  }
+
+  try {
+    const user = JSON.parse(userStr);
+    if (!user || !user.id) {
+      throw new Error('Invalid user data in localStorage');
+    }
+    return user.id;
+  } catch (error) {
+    throw new Error('Failed to parse user data from localStorage');
+  }
+};
 
 export const getAllReservations = async (date?: Date) => {
   try {
@@ -50,8 +65,9 @@ export const getAllReservations = async (date?: Date) => {
 
 export const getUserReservations = async () => {
   try {
-    console.log('Making API request to:', `/reservations/user/${USER_ID}`);
-    const response = await api.get<Reservation[]>(`/reservations/user/${USER_ID}`);
+    const userId = getUserId();
+    console.log('Making API request to:', `/reservations/user/${userId}`);
+    const response = await api.get<Reservation[]>(`/reservations/user/${userId}`);
     console.log('Raw API Response:', response);
     
     if (!response.data) {
@@ -81,15 +97,21 @@ export const getUserReservations = async () => {
 export const cancelReservation = (id: number) => 
   api.delete(`/reservations/${id}`);
 
-export const getNextReservation = () => 
-  api.get<Reservation>(`/reservations/next/${USER_ID}`);
+export const getNextReservation = () => {
+  const userId = getUserId();
+  return api.get<Reservation>(`/reservations/next/${userId}`);
+};
 
 export const createReservation = (data: {
   salleId: number;
   dateDebut: string;
   dateFin: string;
-  utilisateurId: number;
   statut: string;
   description: string;
-}) => 
-  api.post<Reservation>(`/reservations`, data);
+}) => {
+  const userId = getUserId();
+  return api.post<Reservation>(`/reservations`, {
+    ...data,
+    utilisateurId: userId
+  });
+};

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { LogOut, Calendar, Home, User } from 'lucide-react';
+import { LogOut, Calendar, Home } from 'lucide-react';
 import logo from './assets/fsr.jpg';
 
 const Header: React.FC = () => {
@@ -13,7 +13,7 @@ const Header: React.FC = () => {
       <div className="flex items-center h-16 px-4 sm:px-6 lg:px-8">
         {/* Left Section: Logo and Brand */}
         <div className="flex items-center space-x-3 flex-shrink-0">
-          <Link to="/" className="flex items-center">
+          <Link to="/salles" className="flex items-center">
             <img src={logo} alt="FSR Logo" className="h-10 w-10 rounded-lg object-cover shadow-sm" />
             <div className="flex flex-col ml-3">
               <span className="text-lg font-semibold text-gray-900">Room Booking</span>
@@ -25,7 +25,7 @@ const Header: React.FC = () => {
         {/* Center Section: Navigation Links */}
         <nav className="flex flex-1 justify-center items-center space-x-1">
           <Link
-            to="/"
+            to="/salles"
             className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors"
           >
             <Home className="w-4 h-4 mr-2" />

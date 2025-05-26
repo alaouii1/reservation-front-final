@@ -218,7 +218,7 @@ const RoomsPage: React.FC = () => {
               rooms={filteredRooms}
               hideLocationColumn={true}
               reservations={reservations}
-            />
+            /> 
           )}
         </div>
       </main>

@@ -1,6 +1,8 @@
 import React from 'react';
+
 import { Link, useLocation } from 'react-router-dom';
 import { LogOut, Calendar, Home, User } from 'lucide-react';
+
 import logo from './assets/fsr.jpg';
 
 const Header: React.FC = () => {
@@ -29,11 +31,13 @@ const Header: React.FC = () => {
         <nav className="flex flex-1 justify-center items-center space-x-1">
           <Link
             to="/salles"
+
             className={`${
               location.pathname === '/salles'
                 ? 'border-indigo-500 text-gray-900'
                 : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
             } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+
           >
             <Home className="w-4 h-4 mr-2" />
             Accueil

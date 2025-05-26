@@ -26,7 +26,7 @@ const Login = () => {
 
       if (response.status === 200) {
         const userData = response.data;
-        console.log('User data:', userData);
+
         localStorage.setItem("user", JSON.stringify(userData));
         
         // Navigate to rooms page for both admin and professor

@@ -13,6 +13,10 @@ function AdminRooms() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Filter and Search states
+  const [selectedLocation, setSelectedLocation] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+
   // Fetch rooms and locations on component mount
   useEffect(() => {
     const fetchData = async () => {
@@ -129,6 +133,12 @@ function AdminRooms() {
     }
   };
 
+  const filteredRooms = rooms.filter(room => {
+    const matchesLocation = selectedLocation === 'all' || room.localisationNom === selectedLocation;
+    const matchesSearch = room.nom.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesLocation && matchesSearch;
+  });
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -146,45 +156,93 @@ function AdminRooms() {
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Gestion des Salles</h2>
-        <button
-          onClick={handleAddRoom}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
-        >
-          Ajouter une Salle
-        </button>
+    <div className="p-6 max-w-7xl mx-auto">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-800">Gestion des Salles</h1>
+        <div className="flex gap-4">
+          <button
+            onClick={handleAddRoom}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-md"
+          >
+            Ajouter Salle
+          </button>
+        </div>
       </div>
 
-      <div className="bg-white shadow-md rounded-lg overflow-hidden">
+      {/* Filters and Search */}
+      <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Location Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Filtrer par localisation
+            </label>
+            <select
+              className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+              value={selectedLocation}
+              onChange={(e) => setSelectedLocation(e.target.value)}
+            >
+              <option value="all">Toutes les localisations</option>
+              {locations.map((location) => (
+                <option key={location.id} value={location.nom}>
+                  {location.nom}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Search Bar */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Rechercher par nom
+            </label>
+            <input
+              type="text"
+              placeholder="Entrez le nom de la salle..."
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Rooms Table */}
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Localisation</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Localisation</th>
+              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {rooms.map((room) => (
-              <tr key={room.id}>
+            {filteredRooms.map((room) => (
+              <tr key={room.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{room.nom}</td>
-                <td className="px-6 py-4 text-gray-500">{room.description}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-gray-500">{room.localisationNom}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <td className="px-6 py-4 text-sm text-gray-500">{room.description}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{room.localisationNom}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex space-x-3">
                   <button
                     onClick={() => handleEditRoom(room)}
-                    className="text-indigo-600 hover:text-indigo-900 mr-4"
+                    className="text-indigo-600 hover:text-indigo-900 transition-colors p-1 rounded-md hover:bg-indigo-50 flex items-center justify-center"
+                    title="Modifier"
                   >
-                    Modifier
+                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                        <path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" />
+                      </svg>
                   </button>
                   <button
                     onClick={() => handleDeleteRoom(room.id)}
-                    className="text-red-600 hover:text-red-900"
+                    className="text-red-600 hover:text-red-900 transition-colors p-1 rounded-md hover:bg-red-50 flex items-center justify-center"
+                    title="Supprimer"
                   >
-                    Supprimer
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                       <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 000-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm2 4a1 1 0 100 2h2a1 1 0 100-2H9z" clipRule="evenodd" />
+                    </svg>
                   </button>
                 </td>
               </tr>
@@ -195,8 +253,8 @@ function AdminRooms() {
 
       {/* Room Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-600/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-8 border w-[500px] shadow-2xl rounded-lg bg-white/95 backdrop-blur-sm">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+          <div className="relative mx-auto p-8 w-[500px] bg-white rounded-xl shadow-2xl">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-semibold text-gray-900">
                 {currentRoom.id ? 'Modifier la Salle' : 'Ajouter une Salle'}
@@ -284,8 +342,8 @@ function AdminRooms() {
                 onClick={handleSaveRoom}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-2"
               >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                   <path fillRule="evenodd" d="M5 13l4 4L19 7" clipRule="evenodd" />
                 </svg>
                 {currentRoom.id ? 'Modifier' : 'Ajouter'}
               </button>
@@ -296,8 +354,8 @@ function AdminRooms() {
 
       {/* Location Modal */}
       {isLocationModalOpen && (
-        <div className="fixed inset-0 bg-black/30 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-6 w-[400px] bg-white rounded-lg shadow-lg">
+        <div className="fixed inset-0 bg-black/30  overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+          <div className="relative mx-auto p-6 w-[400px] bg-white rounded-lg shadow-lg">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-medium text-gray-900">
                 Nouvelle Localisation

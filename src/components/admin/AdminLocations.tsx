@@ -36,11 +36,11 @@ function AdminLocations() {
     setIsModalOpen(true);
   };
 
-  const handleDeleteLocation = async (id: number) => {
+  const handleDeleteLocation = async (nom: string) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette localisation ?')) {
       try {
-        await deleteLocalisation(id);
-        setLocations(locations.filter(loc => loc.id !== id));
+        await deleteLocalisation(nom);
+        setLocations(locations.filter(loc => loc.nom !== nom));
       } catch (error) {
         console.error('Error deleting location:', error);
         setError('Erreur lors de la suppression de la localisation');
@@ -119,7 +119,7 @@ function AdminLocations() {
                       </svg>
                   </button>
                   <button
-                    onClick={() => handleDeleteLocation(location.id)}
+                    onClick={() => handleDeleteLocation(location.nom)}
                     className="text-red-600 hover:text-red-900 transition-colors p-1 rounded-md hover:bg-red-50 flex items-center justify-center"
                     title="Supprimer"
                   >

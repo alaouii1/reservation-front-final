@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
+import type { Utilisateur } from '../types/Utilisateur';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -21,25 +22,42 @@ const Login = () => {
 
     try {
       console.log('Attempting login with:', loginData);
-      const response = await axios.post('http://localhost:8080/api/utilisateurs/login', loginData);
+      const response = await axios.post<Utilisateur>('http://localhost:8080/api/utilisateurs/login', loginData);
       console.log('Login response:', response.data);
 
       if (response.status === 200) {
         const userData = response.data;
 
-        localStorage.setItem("user", JSON.stringify(userData));
-        
-        // Navigate to rooms page for both admin and professor
-        console.log('Navigating to rooms page...');
-        navigate("/salles");
+        console.log('User data:', userData);
+
+        if (userData.status === 'CONFIRMEE') {
+          localStorage.setItem("user", JSON.stringify(userData));
+          console.log('Navigating to rooms page...');
+          navigate("/salles");
+        } else if (userData.status === 'EN_ATTENTE') {
+          setErrorMessage('Votre compte est en attente de confirmation par l\'administrateur.');
+        } else if (userData.status === 'REJETE') {
+          setErrorMessage('Votre compte a été rejeté. Veuillez contacter l\'administrateur.');
+        } else {
+          // Handle unexpected status
+          setErrorMessage('Statut utilisateur inconnu. Veuillez contacter l\'administrateur.');
+        }
+      } else {
+        setErrorMessage('Erreur de connexion, veuillez vérifier vos informations.');
       }
     } catch (error) {
       console.error('Login error:', error);
       if (axios.isAxiosError(error)) {
         console.error('Error response:', error.response?.data);
         console.error('Error status:', error.response?.status);
+        if (error.response?.status === 401 || error.response?.status === 403) {
+             setErrorMessage('Identifiants incorrects.');
+        } else {
+             setErrorMessage('Une erreur est survenue lors de la connexion.');
+        }
+      } else {
+        setErrorMessage('Une erreur est survenue lors de la connexion.');
       }
-      setErrorMessage('Erreur de connexion, veuillez vérifier vos informations.');
     }
   };
 

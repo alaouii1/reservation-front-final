@@ -22,6 +22,6 @@ export async function updateLocalisation(id: number, nom: string): Promise<Local
   return response.data;
 }
 
-export async function deleteLocalisation(id: number): Promise<void> {
+export async function deleteLocalisation(id: string): Promise<void> {
   await axios.delete(`${BASE_URL}/${id}`);
 } 

@@ -39,10 +39,11 @@ function AdminPage() {
           </div>
           <div className="p-6">
             <Routes>
-              <Route path="/" element={<AdminRooms />} />
+            <Route path="/reservations" element={<AdminReservations />} />
+              <Route path="/" element={<AdminReservations />} />
               <Route path="/rooms" element={<AdminRooms />} />
               <Route path="/locations" element={<AdminLocations />} />
-              <Route path="/reservations" element={<AdminReservations />} />
+              
               <Route path="/users" element={<AdminUsers />} />
             </Routes>
           </div>

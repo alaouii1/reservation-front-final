@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import type { SalleResponseDTO } from './types/salle';
 import type { Reservation } from './types/Reservation';
+import ReservationDetailsModal from './components/ReservationDetailsModal';
 
 interface RoomBookingTableProps {
   selectedDate: Date;
@@ -34,6 +35,9 @@ const RoomBookingTable: React.FC<RoomBookingTableProps> = ({
   hideLocationColumn = false,
   reservations = []
 }) => {
+  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+
   // Helper to check if a room is booked at a given time
   const isBooked = (roomId: number, timeSlot: TimeSlot) => {
     // Get the date part in local time (YYYY-MM-DD)
@@ -70,6 +74,31 @@ const RoomBookingTable: React.FC<RoomBookingTableProps> = ({
              slotStartMinutes < reservationEndMinutes && 
              slotEndMinutes > reservationStartMinutes;
     });
+  };
+
+  // Handle cell click for showing reservation details
+  const handleCellClick = (room: SalleResponseDTO, timeSlot: TimeSlot) => {
+    const reservation = reservations.find(reservation => {
+      const reservationDate = reservation.dateDebut.split('T')[0];
+      const selectedDateStr = selectedDate.toLocaleDateString('en-CA');
+      const [reservationHour, reservationMinute] = reservation.dateDebut.split('T')[1].split(':').map(Number);
+      const [reservationEndHour, reservationEndMinute] = reservation.dateFin.split('T')[1].split(':').map(Number);
+
+      const slotStartMinutes = timeSlot.hour * 60 + timeSlot.minute;
+      const slotEndMinutes = slotStartMinutes + timeSlot.duration;
+      const reservationStartMinutes = reservationHour * 60 + reservationMinute;
+      const reservationEndMinutes = reservationEndHour * 60 + reservationEndMinute;
+
+      return reservation.salle.id === room.id && 
+             reservationDate === selectedDateStr && 
+             slotStartMinutes < reservationEndMinutes && 
+             slotEndMinutes > reservationStartMinutes;
+    });
+
+    if (reservation) {
+      setSelectedReservation(reservation);
+      setIsDetailsModalOpen(true);
+    }
   };
 
   // Format time slot for display
@@ -129,11 +158,17 @@ const RoomBookingTable: React.FC<RoomBookingTableProps> = ({
                         key={idx}
                         className={`px-3 py-3 border-r border-slate-200 transition-colors ${
                           booked 
-                            ? "bg-rose-50 cursor-not-allowed" 
+                            ? "bg-rose-50 cursor-pointer"
                             : "bg-white hover:bg-slate-50 cursor-pointer"
                         } ${idx === timeSlots.length - 1 ? 'border-r-0' : ''}`}
                         onClick={() => {
-                          if (isClickable) onCellClick({ id: room.id, name: room.nom }, slot);
+                          if (booked) {
+                            // If booked, call handleCellClick to show details modal
+                            handleCellClick(room, slot);
+                          } else if (slot.isAvailable) {
+                            // If not booked and available, call onCellClick for new reservation
+                            onCellClick({ id: room.id, name: room.nom }, slot);
+                          }
                         }}
                       >
                         {booked && (
@@ -164,6 +199,17 @@ const RoomBookingTable: React.FC<RoomBookingTableProps> = ({
           </tbody>
         </table>
       </div>
+
+      {selectedReservation && (
+        <ReservationDetailsModal
+          isOpen={isDetailsModalOpen}
+          onClose={() => {
+            setIsDetailsModalOpen(false);
+            setSelectedReservation(null);
+          }}
+          reservation={selectedReservation}
+        />
+      )}
     </>
   );
 };

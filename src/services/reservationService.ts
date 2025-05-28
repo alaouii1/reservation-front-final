@@ -38,6 +38,7 @@ export const getAllReservations = async (date?: Date) => {
       
       const filteredReservations = response.data.filter(reservation => {
         const reservationDate = reservation.dateDebut.split('T')[0];
+        console.log(`Comparing reservation date ${reservationDate} with selected date ${dateStr}`);
         return reservationDate === dateStr;
       });
       

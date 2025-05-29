@@ -34,7 +34,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedDate, onDateChange }) => {
   }, []);
 
   return (
-    <aside className="w-full max-w-xs bg-gray-50 p-4 border-r border-gray-200 min-h-screen flex flex-col gap-6">
+    <aside className="bg-gray-50 p-4 border-r border-gray-200 min-h-screen flex flex-col gap-6">
   
 
       {/* Next Reservation Banner */}

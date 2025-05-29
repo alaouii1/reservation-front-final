@@ -3,10 +3,12 @@ export interface SalleResponseDTO {
   nom: string;
   description: string;
   localisationNom: string;
+  dispo: boolean;
 }
 
 export interface SalleRequestDTO {
   nom: string;
   description: string;
   localisationNom: string;
+  dispo: boolean;
 }

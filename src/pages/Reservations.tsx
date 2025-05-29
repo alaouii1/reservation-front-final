@@ -213,6 +213,9 @@ const Reservations = () => {
     past: reservations.filter(r => new Date(r.dateDebut) <= new Date() || r.statut === 'ANNULEE')
   };
 
+  // Calculate the number of pending upcoming reservations (no longer needed for display, but keeping the filter logic)
+  const pendingUpcomingCount = groupedReservations.upcoming.filter(r => r.statut === 'EN_ATTENTE').length;
+
   return (
     <div className="p-8 max-w-7xl mx-auto bg-gray-50 min-h-screen">
       <header className="mb-8">
@@ -231,7 +234,7 @@ const Reservations = () => {
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            À venir
+            À venir {groupedReservations.upcoming.length > 0 && `(${groupedReservations.upcoming.length})`}
           </button>
           <button
             onClick={() => setActiveTab('past')}

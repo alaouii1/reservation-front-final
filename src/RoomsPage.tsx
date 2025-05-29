@@ -76,10 +76,13 @@ const RoomsPage: React.FC = () => {
     return locs;
   }, [rooms]);
 
-  // Filter rooms by selected location
+  // Filter rooms by selected location and availability
   const filteredRooms = useMemo(() => {
-    if (!selectedLocation) return rooms;
-    return rooms.filter(r => r.localisationNom === selectedLocation);
+    return rooms.filter(room => {
+      const isAvailable = room.dispo === true;
+      const matchesLocation = !selectedLocation || room.localisationNom === selectedLocation;
+      return isAvailable && matchesLocation;
+    });
   }, [rooms, selectedLocation]);
 
   const handleCellClick = (room: { id: number; name: string }, timeSlot: TimeSlot) => {
@@ -155,9 +158,11 @@ const RoomsPage: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
-      <Sidebar selectedDate={selectedDate} onDateChange={setSelectedDate} />
-      <main className="flex-1 p-8">
+    <div className="flex bg-gray-100 pt-16 min-h-screen">
+      <div className="fixed top-16 left-0 w-80 h-[calc(100vh-4rem)] bg-white border-r border-gray-200 shadow-md">
+        <Sidebar selectedDate={selectedDate} onDateChange={setSelectedDate} />
+      </div>
+      <main className="flex-1 p-8 ml-80">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">

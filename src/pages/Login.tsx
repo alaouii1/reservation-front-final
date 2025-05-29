@@ -124,7 +124,16 @@ const Login = () => {
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm">
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => navigate('/register')}
+            className="text-sm text-blue-600 hover:text-blue-500 font-medium"
+          >
+            Créer un compte
+          </button>
+        </div>
+
+        <div className="mt-4 text-center text-sm">
           <span>Besoin d'aide ? </span>
           <a href="#" className="text-blue-500">Contactez le support</a>
         </div>

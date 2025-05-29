@@ -107,6 +107,11 @@ function AdminUsers() {
     return user.status === filterStatus;
   });
 
+  // Calculate counts for each status
+  const allUsersCount = users.length;
+  const confirmedUsersCount = users.filter(user => user.status === 'CONFIRMEE').length;
+  const pendingUsersCount = users.filter(user => user.status === 'EN_ATTENTE').length;
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -136,19 +141,19 @@ function AdminUsers() {
             onClick={() => setFilterStatus('all')}
             className={`flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-all ${filterStatus === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
           >
-            Tous
+            Tous ({allUsersCount})
           </button>
           <button
             onClick={() => setFilterStatus('CONFIRMEE')}
             className={`flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-all ${filterStatus === 'CONFIRMEE' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
           >
-            Confirmée
+            Confirmée ({confirmedUsersCount})
           </button>
           <button
             onClick={() => setFilterStatus('EN_ATTENTE')}
             className={`flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-all ${filterStatus === 'EN_ATTENTE' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
           >
-            En attente
+            En attente ({pendingUsersCount})
           </button>
           <button
             onClick={() => setFilterStatus('REJETE')}
@@ -164,7 +169,6 @@ function AdminUsers() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
               <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
               <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prénom</th>
               <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
@@ -176,7 +180,6 @@ function AdminUsers() {
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredUsers.map((user) => (
               <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{user.id}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.nom}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.prenom}</td>
                 <td className="px-6 py-4 text-sm text-gray-500">{user.email}</td>

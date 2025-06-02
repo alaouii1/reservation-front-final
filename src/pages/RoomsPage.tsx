@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import Sidebar from './Sidebar';
-import RoomBookingTable from './RoomBookingTable';
-import ReservationModal from './ReservationModal';
-import { getAllSalles } from './services/salleService';
-import { createReservation, getAllReservations } from './services/reservationService';
-import type { SalleResponseDTO } from './types/salle';
-import type { Reservation } from './types/Reservation';
+import Sidebar from '../components/Sidebar';
+import RoomBookingTable from '../components/RoomBookingTable';
+import ReservationModal from '../components/ReservationModal';
+import { getAllSalles } from '../services/salleService';
+import { createReservation, getAllReservations } from '../services/reservationService';
+import type { SalleResponseDTO } from '../types/salle';
+import type { Reservation } from '../types/Reservation';
 
 interface TimeSlot {
   hour: number;

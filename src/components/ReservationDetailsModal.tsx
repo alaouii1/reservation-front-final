@@ -15,6 +15,10 @@ const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = ({
 }) => {
   const sliderRef = useRef<HTMLDivElement>(null);
 
+  // Get user role from localStorage
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isAdmin = user.role === 'ADMIN';
+
   // Close modal when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -88,41 +92,52 @@ const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = ({
 
         {reservation ? (
           <div className="p-4 space-y-4 overflow-y-auto h-[calc(100%-64px)]">
-            <div>
-              <h3 className="text-sm font-medium text-gray-500">Room</h3>
-              <p className="mt-1 text-sm text-gray-900">{reservation.salle.nom}</p>
-            </div>
+            {isAdmin ? (
+              <>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Room</h3>
+                  <p className="mt-1 text-sm text-gray-900">{reservation.salle.nom}</p>
+                </div>
 
-            <div>
-              <h3 className="text-sm font-medium text-gray-500">Date & Time</h3>
-              <p className="mt-1 text-sm text-gray-900">
-                {formatDate(reservation.dateDebut)} {formatTime(reservation.dateDebut)} - {formatTime(reservation.dateFin)}
-              </p>
-            </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Date & Time</h3>
+                  <p className="mt-1 text-sm text-gray-900">
+                    {formatDate(reservation.dateDebut)} {formatTime(reservation.dateDebut)} - {formatTime(reservation.dateFin)}
+                  </p>
+                </div>
 
-            <div>
-              <h3 className="text-sm font-medium text-gray-500">Booked By</h3>
-              <p className="mt-1 text-sm text-gray-900">{reservation.utilisateur.nom} {reservation.utilisateur.prenom}</p>
-            </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Booked By</h3>
+                  <p className="mt-1 text-sm text-gray-900">{reservation.utilisateur.nom} {reservation.utilisateur.prenom}</p>
+                </div>
 
-            {reservation.description && (
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Description</h3>
-                <p className="mt-1 text-sm text-gray-900">{reservation.description}</p>
+                {reservation.description && (
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">Description</h3>
+                    <p className="mt-1 text-sm text-gray-900">{reservation.description}</p>
+                  </div>
+                )}
+
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Status</h3>
+                  <span
+                    className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(reservation.statut)}`}
+                  >
+                    {reservation.statut}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8">
+                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <h3 className="mt-2 text-sm font-medium text-gray-900">Accès restreint</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Seuls les administrateurs peuvent voir les détails des réservations.
+                </p>
               </div>
             )}
-
-            <div>
-              <h3 className="text-sm font-medium text-gray-500">Status</h3>
-              <span
-                className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(reservation.statut)}`}
-              >
-                {reservation.statut}
-              </span>
-            </div>
-
-            {/* Add more reservation details here as needed */}
-
           </div>
         ) : (
           <div className="p-4 text-center text-gray-500">

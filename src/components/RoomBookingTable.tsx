@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import type { SalleResponseDTO } from './types/salle';
-import type { Reservation } from './types/Reservation';
-import ReservationDetailsModal from './components/ReservationDetailsModal';
+import type { SalleResponseDTO } from '../types/salle';
+import type { Reservation } from '../types/Reservation';
+import ReservationDetailsModal from './ReservationDetailsModal';
 
 interface RoomBookingTableProps {
   selectedDate: Date;
@@ -37,6 +37,10 @@ const RoomBookingTable: React.FC<RoomBookingTableProps> = ({
 }) => {
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+
+  // Get user role from localStorage
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isAdmin = user.role === 'ADMIN';
 
   // Helper to check if a room is booked at a given time
   const isBooked = (roomId: number, timeSlot: TimeSlot) => {
@@ -95,7 +99,7 @@ const RoomBookingTable: React.FC<RoomBookingTableProps> = ({
              slotEndMinutes > reservationStartMinutes;
     });
 
-    if (reservation) {
+    if (reservation && isAdmin) {
       setSelectedReservation(reservation);
       setIsDetailsModalOpen(true);
     }
@@ -110,6 +114,26 @@ const RoomBookingTable: React.FC<RoomBookingTableProps> = ({
     const endMinute = endTime.getMinutes().toString().padStart(2, '0');
     
     return `${startHour}:${startMinute}  -  ${endHour}:${endMinute}`;
+  };
+
+  // Check if a time slot is booked
+  const isTimeSlotBooked = (room: SalleResponseDTO, timeSlot: TimeSlot) => {
+    return reservations.some(reservation => {
+      const reservationDate = reservation.dateDebut.split('T')[0];
+      const selectedDateStr = selectedDate.toLocaleDateString('en-CA');
+      const [reservationHour, reservationMinute] = reservation.dateDebut.split('T')[1].split(':').map(Number);
+      const [reservationEndHour, reservationEndMinute] = reservation.dateFin.split('T')[1].split(':').map(Number);
+
+      const slotStartMinutes = timeSlot.hour * 60 + timeSlot.minute;
+      const slotEndMinutes = slotStartMinutes + timeSlot.duration;
+      const reservationStartMinutes = reservationHour * 60 + reservationMinute;
+      const reservationEndMinutes = reservationEndHour * 60 + reservationEndMinute;
+
+      return reservation.salle.id === room.id && 
+             reservationDate === selectedDateStr && 
+             slotStartMinutes < reservationEndMinutes && 
+             slotEndMinutes > reservationStartMinutes;
+    });
   };
 
   return (
@@ -151,18 +175,20 @@ const RoomBookingTable: React.FC<RoomBookingTableProps> = ({
                     </td>
                   )}
                   {timeSlots.map((slot, idx) => {
-                    const booked = isBooked(room.id, slot);
-                    const isClickable = slot.isAvailable && !booked;
+                    const isBooked = isTimeSlotBooked(room, slot);
+                    const isClickable = slot.isAvailable && !isBooked;
                     return (
                       <td
                         key={idx}
                         className={`px-3 py-3 border-r border-slate-200 transition-colors ${
-                          booked 
-                            ? "bg-rose-50 cursor-pointer"
+                          isBooked 
+                            ? isAdmin 
+                              ? "bg-rose-50 cursor-pointer" 
+                              : "bg-rose-50 cursor-not-allowed"
                             : "bg-white hover:bg-slate-50 cursor-pointer"
                         } ${idx === timeSlots.length - 1 ? 'border-r-0' : ''}`}
                         onClick={() => {
-                          if (booked) {
+                          if (isBooked) {
                             // If booked, call handleCellClick to show details modal
                             handleCellClick(room, slot);
                           } else if (slot.isAvailable) {
@@ -171,9 +197,9 @@ const RoomBookingTable: React.FC<RoomBookingTableProps> = ({
                           }
                         }}
                       >
-                        {booked && (
+                        {isBooked && (
                           <div className="w-full h-full flex items-center justify-center">
-                            <span className="text-rose-600 text-sm font-medium">Booked</span>
+                            <span className="text-rose-600 text-sm font-medium">Réservé</span>
                           </div>
                         )}
                       </td>

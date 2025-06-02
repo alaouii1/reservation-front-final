@@ -40,11 +40,26 @@ const RegisterPage = () => {
     } catch (error) {
       console.error('Registration error:', error);
       setIsError(true);
+      let errorMessage = 'Une erreur est survenue lors de l\'inscription.';
+
       if (axios.isAxiosError(error)) {
-        setMessage(error.response?.data?.message || 'Une erreur est survenue lors de l\'inscription.');
+        console.error('Error response data:', error.response?.data); // Log response data
+        console.error('Error response status:', error.response?.status); // Log response status
+
+        // Check for duplicate email error based on response data message
+        const backendErrorMessage = error.response?.data?.message || error.message;
+        if (backendErrorMessage && backendErrorMessage.includes('Duplicate entry') && backendErrorMessage.includes('UKrma38wvnqfaf66vvmi57c71lo')) {
+          errorMessage = 'Cette adresse email est déjà utilisée. Veuillez en choisir une autre.';
+        } else if (error.response?.data?.message) {
+           errorMessage = error.response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+
       } else {
-        setMessage('Une erreur est survenue lors de l\'inscription.');
+         errorMessage = 'Une erreur est survenue lors de l\'inscription.';
       }
+       setMessage(errorMessage);
     }
   };
 

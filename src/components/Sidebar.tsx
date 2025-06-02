@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Calendar from './Calendar';
-import { getNextReservation } from './services/reservationService';
+import { getNextReservation } from '../services/reservationService';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import type { Reservation } from './types/Reservation';
-import fsrLogo from './assets/fsr.jpg';
+import type { Reservation } from '../types/Reservation';
+import fsrLogo from '../assets/fsr.jpg';
 
 interface SidebarProps {
   selectedDate: Date;

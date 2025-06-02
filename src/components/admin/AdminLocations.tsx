@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getAllLocalisations, createLocalisation, updateLocalisation, deleteLocalisation, type Localisation } from '../../services/localisationService';
+import { getAllLocalisations, createLocalisation, deleteLocalisation, type Localisation } from '../../services/localisationService';
 
 function AdminLocations() {
   const [locations, setLocations] = useState<Localisation[]>([]);
@@ -7,6 +7,20 @@ function AdminLocations() {
   const [currentLocation, setCurrentLocation] = useState<Partial<Localisation>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    type: 'danger' | 'warning' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    type: 'warning'
+  });
 
   const fetchLocations = async () => {
     try {
@@ -31,39 +45,53 @@ function AdminLocations() {
     setIsModalOpen(true);
   };
 
-  const handleEditLocation = (location: Localisation) => {
-    setCurrentLocation(location);
-    setIsModalOpen(true);
+  const showNotification = (message: string, type: 'success' | 'error') => {
+    setNotification({ message, type });
+    setTimeout(() => {
+      setNotification(null);
+    }, 3000);
+  };
+
+  const showConfirmModal = (title: string, message: string, onConfirm: () => void, type: 'danger' | 'warning' | 'info' = 'warning') => {
+    setConfirmModal({
+      isOpen: true,
+      title,
+      message,
+      onConfirm,
+      type
+    });
   };
 
   const handleDeleteLocation = async (nom: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette localisation ?')) {
-      try {
-        await deleteLocalisation(nom);
-        setLocations(locations.filter(loc => loc.nom !== nom));
-      } catch (error) {
-        console.error('Error deleting location:', error);
-        setError('Erreur lors de la suppression de la localisation');
-      }
-    }
+    showConfirmModal(
+      'Supprimer la localisation',
+      'Êtes-vous sûr de vouloir supprimer cette localisation ? Cette action est irréversible.',
+      async () => {
+        try {
+          await deleteLocalisation(nom);
+          setLocations(locations.filter(loc => loc.nom !== nom));
+          showNotification('Localisation supprimée avec succès', 'success');
+        } catch (error) {
+          console.error('Error deleting location:', error);
+          setError('Erreur lors de la suppression de la localisation');
+          showNotification('Erreur lors de la suppression de la localisation', 'error');
+        }
+      },
+      'danger'
+    );
   };
 
   const handleSaveLocation = async () => {
     try {
-      if (currentLocation.id) {
-        // Update existing location
-        const updatedLocation = await updateLocalisation(currentLocation.id, currentLocation.nom || '');
-        setLocations(locations.map(loc => loc.id === currentLocation.id ? updatedLocation : loc));
-      } else {
-        // Add new location
-        const newLocation = await createLocalisation(currentLocation.nom || '');
-        setLocations([...locations, newLocation]);
-      }
+      const newLocation = await createLocalisation(currentLocation.nom || '');
+      setLocations([...locations, newLocation]);
+      showNotification('Localisation ajoutée avec succès', 'success');
       setIsModalOpen(false);
       setCurrentLocation({});
     } catch (error) {
       console.error('Error saving location:', error);
       setError('Erreur lors de l\'enregistrement de la localisation');
+      showNotification('Erreur lors de l\'enregistrement de la localisation', 'error');
     }
   };
 
@@ -85,6 +113,64 @@ function AdminLocations() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
+      {/* Notification */}
+      {notification && (
+        <div className={`fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg transform transition-all duration-500 ease-in-out ${
+          notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+        } text-white`}>
+          <div className="flex items-center">
+            {notification.type === 'success' ? (
+              <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            )}
+            <span>{notification.message}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm overflow-y-auto h-full w-full z-[100] flex items-center justify-center">
+          <div className="relative mx-auto p-6 w-[400px] bg-white rounded-xl shadow-2xl">
+            <div className="flex items-center mb-4">
+              {confirmModal.type === 'danger' && (
+                <div className="flex-shrink-0 p-2 bg-red-100 rounded-full mr-3">
+                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+              )}
+              <h3 className="text-lg font-medium text-gray-900">{confirmModal.title}</h3>
+            </div>
+            <div className="mt-2">
+              <p className="text-sm text-gray-500">{confirmModal.message}</p>
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => {
+                  confirmModal.onConfirm();
+                  setConfirmModal({ ...confirmModal, isOpen: false });
+                }}
+                className="px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
+              >
+                Confirmer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-800">Gestion des Localisations</h1>
         <button
@@ -100,7 +186,7 @@ function AdminLocations() {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
-              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -108,16 +194,6 @@ function AdminLocations() {
               <tr key={location.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{location.nom}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex space-x-3 justify-end">
-                  <button
-                    onClick={() => handleEditLocation(location)}
-                    className="text-indigo-600 hover:text-indigo-900 transition-colors p-1 rounded-md hover:bg-indigo-50 flex items-center justify-center"
-                    title="Modifier"
-                  >
-                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-                        <path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" />
-                      </svg>
-                  </button>
                   <button
                     onClick={() => handleDeleteLocation(location.nom)}
                     className="text-red-600 hover:text-red-900 transition-colors p-1 rounded-md hover:bg-red-50 flex items-center justify-center"
@@ -140,7 +216,7 @@ function AdminLocations() {
           <div className="relative mx-auto p-8 w-[400px] bg-white rounded-xl shadow-2xl">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-semibold text-gray-900">
-                {currentLocation.id ? 'Modifier la Localisation' : 'Ajouter une Localisation'}
+                Ajouter une Localisation
               </h3>
               <button
                 onClick={() => {
@@ -187,7 +263,7 @@ function AdminLocations() {
                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                    <path fillRule="evenodd" d="M5 13l4 4L19 7" clipRule="evenodd" />
                 </svg>
-                {currentLocation.id ? 'Modifier' : 'Ajouter'}
+                Ajouter
               </button>
             </div>
           </div>

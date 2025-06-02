@@ -3,7 +3,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { LogOut, Calendar, Home, User } from 'lucide-react';
 
-import logo from './assets/fsr.jpg';
+import logo from '../assets/fsr.jpg';
 
 const Header: React.FC = () => {
   const location = useLocation();

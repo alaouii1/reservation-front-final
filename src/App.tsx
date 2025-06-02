@@ -1,8 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import Header from './Header';
+import Header from './components/Header';
 import Login from './pages/Login';
-import RoomsPage from './RoomsPage';
+import RoomsPage from './pages/RoomsPage';
 import Reservations from './pages/Reservations';
 import AdminPage from './pages/AdminPage';
 import RegisterPage from './pages/RegisterPage';

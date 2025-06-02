@@ -8,11 +8,28 @@ function AdminReservations() {
   const [locations, setLocations] = useState<Localisation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    type: 'danger' | 'warning' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    type: 'warning'
+  });
 
   // Filter states
   const [selectedLocation, setSelectedLocation] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<'all' | 'past' | 'upcoming'>('upcoming');
+  const [userFilter, setUserFilter] = useState<string>('');
+  const [roomFilter, setRoomFilter] = useState<string>('');
+  const [startDateFilter, setStartDateFilter] = useState<string>('');
 
   // Edit modal states
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -21,6 +38,7 @@ function AdminReservations() {
     dateDebut: '',
     dateFin: '',
     description: '',
+    statut: '' as ReservationStatus
   });
 
   useEffect(() => {
@@ -51,38 +69,66 @@ function AdminReservations() {
     fetchData();
   }, []);
 
-  const handleStatusChange = async (reservationId: number, newStatus: ReservationStatus) => {
+  const showNotification = (message: string, type: 'success' | 'error') => {
+    setNotification({ message, type });
+    setTimeout(() => {
+      setNotification(null);
+    }, 3000);
+  };
+
+  const showConfirmModal = (title: string, message: string, onConfirm: () => void, type: 'danger' | 'warning' | 'info' = 'warning') => {
+    setConfirmModal({
+      isOpen: true,
+      title,
+      message,
+      onConfirm,
+      type
+    });
+  };
+
+  const handleStatusChange = async (reservationId: number, newStatus: string) => {
     try {
-      await axios.patch(`/api/reservations/${reservationId}/status`, { statut: newStatus });
-      setReservations(reservations.map(reservation => 
-        reservation.id === reservationId 
-          ? { ...reservation, statut: newStatus } as Reservation // Cast needed due to partial update
-          : reservation
+      await axios.patch(`http://localhost:8080/api/reservations/${reservationId}/status`, { statut: newStatus });
+
+      setReservations(reservations.map(res =>
+        res.id === reservationId
+          ? { ...res, statut: newStatus } // Assuming the response doesn't return the full object
+          : res
       ));
+      showNotification('Statut de la réservation mis à jour avec succès', 'success');
+
     } catch (error) {
       console.error('Error updating reservation status:', error);
-      setError('Erreur lors de la mise à jour du statut');
+      showNotification('Erreur lors de la mise à jour du statut de la réservation', 'error');
     }
   };
 
-   const handleDeleteReservation = async (reservationId: number) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette réservation ?')) {
-      try {
-        await axios.delete(`/api/reservations/${reservationId}`);
-        setReservations(reservations.filter(reservation => reservation.id !== reservationId));
-      } catch (error) {
-        console.error('Error deleting reservation:', error);
-        setError('Erreur lors de la suppression de la réservation');
-      }
-    }
+  const handleDeleteReservation = async (reservationId: number) => {
+    showConfirmModal(
+      'Supprimer la réservation',
+      'Êtes-vous sûr de vouloir supprimer cette réservation ? Cette action est irréversible.',
+      async () => {
+        try {
+          await axios.delete(`/api/reservations/${reservationId}`);
+          setReservations(reservations.filter(reservation => reservation.id !== reservationId));
+          showNotification('Réservation supprimée avec succès', 'success');
+        } catch (error) {
+          console.error('Error deleting reservation:', error);
+          setError('Erreur lors de la suppression de la réservation');
+          showNotification('Erreur lors de la suppression de la réservation', 'error');
+        }
+      },
+      'danger'
+    );
   };
 
   const handleEditReservation = (reservation: Reservation) => {
     setReservationToEdit(reservation);
     setEditFormData({
-      dateDebut: reservation.dateDebut.slice(0, 16), // Assuming date format is compatible with datetime-local input
+      dateDebut: reservation.dateDebut.slice(0, 16),
       dateFin: reservation.dateFin.slice(0, 16),
       description: reservation.description,
+      statut: reservation.statut
     });
     setIsEditModalOpen(true);
   };
@@ -91,22 +137,28 @@ function AdminReservations() {
     if (!reservationToEdit) return;
 
     try {
-      const updatedReservation = {
-        ...reservationToEdit,
-        dateDebut: editFormData.dateDebut,
-        dateFin: editFormData.dateFin,
+      const dateDebut = new Date(editFormData.dateDebut).toISOString();
+      const dateFin = new Date(editFormData.dateFin).toISOString();
+
+      const response = await axios.put(`/api/reservations/${reservationToEdit.id}`, {
+        dateDebut,
+        dateFin,
         description: editFormData.description,
-      };
-      const response = await axios.put(`/api/reservations/${reservationToEdit.id}`, updatedReservation);
+        statut: editFormData.statut,
+        salleId: reservationToEdit.salle.id,
+        utilisateurId: reservationToEdit.utilisateur.id
+      });
+
       setReservations(reservations.map(res => res.id === response.data.id ? response.data : res));
       setIsEditModalOpen(false);
       setReservationToEdit(null);
+      showNotification('Réservation modifiée avec succès', 'success');
     } catch (error) {
       console.error('Error saving reservation:', error);
-       setError('Erreur lors de l\'enregistrement de la réservation');
+      setError('Erreur lors de l\'enregistrement de la réservation');
+      showNotification('Erreur lors de l\'enregistrement de la réservation', 'error');
     }
   };
-
 
   const filteredReservations = reservations.filter(reservation => {
     // Location filter
@@ -126,6 +178,25 @@ function AdminReservations() {
       return false;
     }
     if (dateFilter === 'upcoming' && reservationDate < now) {
+      return false;
+    }
+
+    // Start date filter
+    if (startDateFilter) {
+      const filterDate = new Date(startDateFilter);
+      const reservationStartDate = new Date(reservation.dateDebut);
+      if (reservationStartDate.toDateString() !== filterDate.toDateString()) {
+        return false;
+      }
+    }
+
+    // User name filter
+    if (userFilter && !`${reservation.utilisateur.nom} ${reservation.utilisateur.prenom}`.toLowerCase().includes(userFilter.toLowerCase())) {
+      return false;
+    }
+
+    // Room name filter
+    if (roomFilter && !reservation.salle.nom.toLowerCase().includes(roomFilter.toLowerCase())) {
       return false;
     }
 
@@ -150,12 +221,90 @@ function AdminReservations() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Notification */}
+      {notification && (
+        <div className={`fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg transform transition-all duration-500 ease-in-out ${
+          notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+        } text-white`}>
+          <div className="flex items-center">
+            {notification.type === 'success' ? (
+              <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            )}
+            <span>{notification.message}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm overflow-y-auto h-full w-full z-[100] flex items-center justify-center">
+          <div className="relative mx-auto p-6 w-[400px] bg-white rounded-xl shadow-2xl">
+            <div className="flex items-center mb-4">
+              {confirmModal.type === 'danger' && (
+                <div className="flex-shrink-0 p-2 bg-red-100 rounded-full mr-3">
+                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+              )}
+              {confirmModal.type === 'warning' && (
+                <div className="flex-shrink-0 p-2 bg-yellow-100 rounded-full mr-3">
+                  <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+              )}
+              {confirmModal.type === 'info' && (
+                <div className="flex-shrink-0 p-2 bg-blue-100 rounded-full mr-3">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              )}
+              <h3 className="text-lg font-medium text-gray-900">{confirmModal.title}</h3>
+            </div>
+            <div className="mt-2">
+              <p className="text-sm text-gray-500">{confirmModal.message}</p>
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => {
+                  confirmModal.onConfirm();
+                  setConfirmModal({ ...confirmModal, isOpen: false });
+                }}
+                className={`px-4 py-2 text-white rounded-md transition-colors ${
+                  confirmModal.type === 'danger'
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : confirmModal.type === 'warning'
+                    ? 'bg-yellow-600 hover:bg-yellow-700'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
+              >
+                Confirmer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-6">Gestion des Réservations</h2>
 
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Location Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -192,6 +341,50 @@ function AdminReservations() {
                 <option value="CONFIRMEE">Confirmée</option>
                 <option value="ANNULEE">Annulée</option>
               </select>
+            </div>
+
+            {/* Start Date Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Date de début
+              </label>
+              <input
+                type="date"
+                className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                value={startDateFilter}
+                onChange={(e) => setStartDateFilter(e.target.value)}
+                title="Filtrer par date de début"
+              />
+            </div>
+
+            {/* User Name Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nom d'utilisateur
+              </label>
+              <input
+                type="text"
+                className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                value={userFilter}
+                onChange={(e) => setUserFilter(e.target.value)}
+                placeholder="Rechercher par nom..."
+                title="Filtrer par nom d'utilisateur"
+              />
+            </div>
+
+            {/* Room Name Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nom de la salle
+              </label>
+              <input
+                type="text"
+                className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                value={roomFilter}
+                onChange={(e) => setRoomFilter(e.target.value)}
+                placeholder="Rechercher par salle..."
+                title="Filtrer par nom de salle"
+              />
             </div>
           </div>
         </div>
@@ -403,6 +596,19 @@ function AdminReservations() {
                 />
               </div>
               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Statut</label>
+                <select
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                  value={editFormData.statut}
+                  onChange={(e) => setEditFormData({ ...editFormData, statut: e.target.value as ReservationStatus })}
+                  title="Statut de la réservation"
+                >
+                  <option value="EN_ATTENTE">En attente</option>
+                  <option value="CONFIRMEE">Confirmée</option>
+                  <option value="ANNULEE">Annulée</option>
+                </select>
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                 <textarea
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors min-h-[100px] resize-y"
@@ -412,7 +618,6 @@ function AdminReservations() {
                   title="Description"
                 ></textarea>
               </div>
-               {/* Status can be changed using the table buttons, not directly in this modal */}
             </div>
 
             <div className="mt-6 flex justify-end space-x-4">

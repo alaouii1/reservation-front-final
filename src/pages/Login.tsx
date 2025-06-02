@@ -6,7 +6,7 @@ import type { Utilisateur } from '../types/Utilisateur';
 
 const Login = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('email@university.fr');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -77,7 +77,7 @@ const Login = () => {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="email@university.fr"
+              placeholder="email@um5r.ac.ma"
               className="w-full p-2 border border-gray-300 rounded-md mt-2"
               required
             />
